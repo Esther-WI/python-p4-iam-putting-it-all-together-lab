@@ -243,9 +243,12 @@ class TestRecipeIndex:
                 image_url=fake.url(),
             )
 
-            user.password_hash = 'secret'
+            user.password = 'secret'
 
             db.session.add(user)
+            db.session.commit()
+
+            user_id = user.id  
 
             recipes = []
             for i in range(15):
@@ -255,9 +258,9 @@ class TestRecipeIndex:
                     title=fake.sentence(),
                     instructions=instructions,
                     minutes_to_complete=randint(15,90),
+                    user_id=user.id,
                 )
 
-                recipe.user = user
 
                 recipes.append(recipe)
 
@@ -272,6 +275,9 @@ class TestRecipeIndex:
                 'username': 'Slagathor',
                 'password': 'secret',
             })
+
+            with client.session_transaction() as sess:
+                sess['user_id'] = user_id
 
         
             response = client.get('/recipes')
@@ -318,10 +324,12 @@ class TestRecipeIndex:
                 bio=fake.paragraph(nb_sentences=3),
                 image_url=fake.url(),
             )
-            user.password_hash = 'secret'
+            user.password = 'secret'
             
             db.session.add(user)
             db.session.commit()
+
+            user_id = user.id
 
         # start actual test here
         with app.test_client() as client:
@@ -330,7 +338,8 @@ class TestRecipeIndex:
                 'username': 'Slagathor',
                 'password': 'secret',
             })
-            
+            with client.session_transaction() as sess:
+                sess['user_id'] = user_id
             response = client.post('/recipes', json={
                 'title': fake.sentence(),
                 'instructions': fake.paragraph(nb_sentences=8),
@@ -363,11 +372,14 @@ class TestRecipeIndex:
                 bio=fake.paragraph(nb_sentences=3),
                 image_url=fake.url(),
             )
-            user.password_hash = 'secret'
+            user.password = 'secret'
             
 
             db.session.add(user)
             db.session.commit()
+
+            user_id = user.id 
+
 
         # start actual test here
         with app.test_client() as client:
@@ -376,6 +388,9 @@ class TestRecipeIndex:
                 'username': 'Slagathor',
                 'password': 'secret',
             })
+
+            with client.session_transaction() as sess:
+                sess['user_id'] = user.id
             
             fake = Faker()
 
